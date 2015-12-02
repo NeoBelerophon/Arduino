@@ -26,11 +26,21 @@
 extern "C" {
 #endif
 
+#ifndef TWI_BUFFER_LENGTH
+ #define TWI_BUFFER_LENGTH 32
+#endif
+
 void twi_init(unsigned char sda, unsigned char scl);
 void twi_stop(void);
 void twi_setClock(unsigned int freq);
 uint8_t twi_writeTo(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop);
 uint8_t twi_readFrom(unsigned char address, unsigned char * buf, unsigned int len, unsigned char sendStop);
+
+void twi_setAddress(uint8_t address);
+void twi_attachSlaveRxEvent( void (*)(uint8_t*, int) );
+void twi_attachSlaveTxEvent( void (*)(void) );
+uint8_t twi_transmit(const uint8_t* data, uint8_t length);
+void twi_isr(void);
 
 #ifdef __cplusplus
 }

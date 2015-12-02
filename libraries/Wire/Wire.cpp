@@ -71,9 +71,9 @@ void TwoWire::begin(void){
 }
 
 void TwoWire::begin(uint8_t address){
-  // twi_setAddress(address);
-  // twi_attachSlaveTxEvent(onRequestService);
-  // twi_attachSlaveRxEvent(onReceiveService);
+  twi_setAddress(address);
+  twi_attachSlaveTxEvent(onRequestService);
+  twi_attachSlaveRxEvent(onReceiveService);
   begin();
 }
 
@@ -144,7 +144,7 @@ size_t TwoWire::write(uint8_t data){
     ++txBufferIndex;
     txBufferLength = txBufferIndex;
   } else {
-    // i2c_slave_transmit(&data, 1);
+    twi_transmit(&data, 1);
   }
   return 1;
 }
@@ -155,7 +155,7 @@ size_t TwoWire::write(const uint8_t *data, size_t quantity){
       if(!write(data[i])) return i;
     }
   }else{
-    // i2c_slave_transmit(data, quantity);
+    twi_transmit(data, quantity);
   }
   return quantity;
 }
@@ -199,46 +199,46 @@ void TwoWire::flush(void){
 void TwoWire::onReceiveService(uint8_t* inBytes, int numBytes)
 {
   // don't bother if user hasn't registered a callback
-  // if(!user_onReceive){
-  //   return;
-  // }
-  // // don't bother if rx buffer is in use by a master requestFrom() op
-  // // i know this drops data, but it allows for slight stupidity
-  // // meaning, they may not have read all the master requestFrom() data yet
-  // if(rxBufferIndex < rxBufferLength){
-  //   return;
-  // }
-  // // copy twi rx buffer into local read buffer
-  // // this enables new reads to happen in parallel
-  // for(uint8_t i = 0; i < numBytes; ++i){
-  //   rxBuffer[i] = inBytes[i];
-  // }
-  // // set rx iterator vars
-  // rxBufferIndex = 0;
-  // rxBufferLength = numBytes;
-  // // alert user program
-  // user_onReceive(numBytes);
+   if(!user_onReceive){
+     return;
+   }
+   // don't bother if rx buffer is in use by a master requestFrom() op
+   // i know this drops data, but it allows for slight stupidity
+   // meaning, they may not have read all the master requestFrom() data yet
+   if(rxBufferIndex < rxBufferLength){
+     return;
+   }
+   // copy twi rx buffer into local read buffer
+   // this enables new reads to happen in parallel
+   for(uint8_t i = 0; i < numBytes; ++i){
+     rxBuffer[i] = inBytes[i];
+   }
+   // set rx iterator vars
+   rxBufferIndex = 0;
+   rxBufferLength = numBytes;
+   // alert user program
+   user_onReceive(numBytes);
 }
 
 void TwoWire::onRequestService(void){
-  // // don't bother if user hasn't registered a callback
-  // if(!user_onRequest){
-  //   return;
-  // }
-  // // reset tx buffer iterator vars
-  // // !!! this will kill any pending pre-master sendTo() activity
-  // txBufferIndex = 0;
-  // txBufferLength = 0;
-  // // alert user program
-  // user_onRequest();
+   // don't bother if user hasn't registered a callback
+   if(!user_onRequest){
+     return;
+   }
+   // reset tx buffer iterator vars
+   // !!! this will kill any pending pre-master sendTo() activity
+   txBufferIndex = 0;
+   txBufferLength = 0;
+   // alert user program
+   user_onRequest();
 }
 
 void TwoWire::onReceive( void (*function)(int) ){
-  //user_onReceive = function;
+  user_onReceive = function;
 }
 
 void TwoWire::onRequest( void (*function)(void) ){
-  //user_onRequest = function;
+  user_onRequest = function;
 }
 
 // Preinstantiate Objects //////////////////////////////////////////////////////
